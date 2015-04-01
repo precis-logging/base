@@ -11,6 +11,7 @@ var logger = require('./lib/logger');
 
 var utils = require('./lib/utils');
 var config = require('./lib/config');
+var handlerConfig = utils.defaults({}, config.handler);
 
 var Oplog = require('mongo-oplog');
 var Bus = require('./plugins/bus').Bus;
@@ -20,16 +21,7 @@ var webroot = path.join(__dirname, (config.web||{}).site||'/webroot');
 var server = require('./lib/server');
 var sift = require('sift');
 
-var reIsFunction = /function\s*[]*\s\(([^)]+)\)*/;
-var getFuncInfo = function(source){
-  var args = /\(([^)]+)/.exec(source);
-  var res = {};
-  if (args[1]) {
-    res.args = args[1];
-  }
-  res.body = source.replace(reIsFunction, '');
-  return res;
-};
+var Handler = require('./lib/handler.js').Handler;
 
 logger.info('Static content folder: '+webroot);
 server.path(webroot);
@@ -50,51 +42,7 @@ memwatch.on('leak', function(info) {
   });
 });
 
-
-var encode = function(source){
-  var type = typeof(source);
-  var encodeObject = function(obj){
-    if(obj instanceof Date){
-      return obj.toISOString();
-    }
-    if(obj instanceof RegExp){
-      var src = obj.toString().split('/');
-      return {
-        $regex: src[1],
-        $options: src[2]
-      };
-    }
-    var res = {};
-    Object.keys(obj).forEach(function(key){
-      res[key] = encode(obj[key]);
-    });
-    return res;
-  };
-  var encodeArray = function(arr){
-    return arr.map(function(item){
-      return encode(item);
-    });
-  };
-  switch(type){
-    case('boolean'):
-    case('string'):
-    case('number'):
-      return source;
-      break;
-    case('function'):
-      return source.toString();
-      break;
-    default:
-      if(!source){
-        return source;
-      }
-      if(Array.isArray(source)){
-        return encodeArray(source);
-      }
-      return encodeObject(source);
-      break;
-  }
-};
+var handler = new Handler(handlerConfig);
 
 server.route([
     {
@@ -115,7 +63,7 @@ bus.on('started', function(){
 });
 
 bus.on('event', function(data){
-  agg.push(data);
+  handler.push(data);
 });
 
 bus.on('stopped', function(){
