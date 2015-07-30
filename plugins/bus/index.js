@@ -1,14 +1,18 @@
+var logger = require('../../lib/logger');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var Oplog = require('mongo-oplog');
-var Timestamp = require('mongodb').Timestamp;
 
 var getStartTime = function(options){
-  var startFrom = options.startFrom || new Date();
-  startFrom.setMinutes(0);
-  startFrom.setSeconds(0);
-  startFrom.setMilliseconds(0);
-  return new Timestamp(0, startFrom.getTime() / 1000);
+  if(!options || !options.startTime){
+    var startFrom = new Date();
+    startFrom.setSeconds(0);
+    logger.info('Start: ', startFrom);
+    return Math.floor(startFrom.getTime() / 1000);
+  }
+  var startFrom = new Date(Date.parse(options.startTime));
+  logger.info('Start: ', startFrom);
+  return Math.floor(startFrom.getTime() / 1000);
 };
 
 var Bus = function(options){
@@ -21,43 +25,45 @@ util.inherits(Bus, EventEmitter);
 
 var getOplogConfig = function(options){
   var connectionString = options.connectionString;
-  var ns = options.ns;
+  var database = options.database;
 
   var connParts = connectionString.split('?');
   var connStr = connParts[0].split('/');
   var db = connStr.pop();
-  var ns = db+'.'+options.collection||'bus';
+  var ns = options.ns || (database || db)+'.'+options.collection||'bus';
+  var since = getStartTime(options);
   var config = {
-          since: getStartTime(options)
+          since: since,
+          ns: ns
         };
-  connStr.push('local');
-  connStr = connStr.join('/');
+  logger.info('Start Timestamp: ', new Date(since*1000));
+  connStr.push(db);
+  connStr = connStr.join('/')+(connParts[1]?'?'+connParts[1]:'');
+  logger.info('Bus connecting to:', connStr);
   return {
     connectionString: connStr,
-    ns: ns,
     config: config
   };
-};
-
-Bus.prototype.broadcast = function(msg, data){
-
 };
 
 Bus.prototype.start = function(){
   var options = this.options;
   var oplogConfig = getOplogConfig(options);
 
-  var opLog = new Oplog(oplogConfig.connectionString,
-          oplogConfig.ns,
+  var opLog = Oplog(oplogConfig.connectionString,
           oplogConfig.config)
-        .tail(function(){
+        .tail(function(err){
           this.monitoring = opLog;
-          this.emit('started', opLog);
+          this.emit('started', err||opLog);
         }.bind(this));
-  opLog.filter(oplogConfig.ns).on('insert', function(doc){
+
+  opLog.on('insert', function(doc){
     this.emit('event', doc.o);
   }.bind(this));
-  opLog.stop(function(){
+  opLog.on('error', function(err){
+    this.emit('error', err);
+  }.bind(this));
+  opLog.on('end', function(){
     this.monitoring = false;
     this.emit('stopped');
   }.bind(this));
