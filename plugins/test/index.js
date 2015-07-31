@@ -1,3 +1,6 @@
+var fs = require('fs');
+var path = require('path');
+
 var noop = function(){};
 
 var Test = function(options){
@@ -6,6 +9,7 @@ var Test = function(options){
   this.logger = options.logger;
   this.msgPrefix = options.msgPrefix;
   this.maxSize = options.maxSize || 10;
+  this.sockets = options.sockets;
 
   // Get a Store interface so we can load/save stuff
   this.store = options.stores.get('test');
@@ -20,23 +24,32 @@ var Test = function(options){
     {
       method: 'GET',
       path: '/api/v1/test/latest/record',
-      handler: function(req, reply){
-        return reply(this.latest);
-      }.bind(this)
+      config: {
+        description: 'Get latest record seen',
+        notes: 'These are the notes related to /api/v1/test/latest/record for SWAGGER documentation',
+        tags: ['api'],
+        handler: function(req, reply){
+          return reply(this.latest);
+        }.bind(this)
+      }
     },
     {
       method: 'GET',
       path: '/api/v1/test/records',
-      handler: function(req, reply){
-        // If you wanted to use the store you
-        // would do it as follows
-        /*
-        return store.asArray(req.query, function(err, records){
-          return reply(err || records);
-        });
-        */
-        return reply(this.records);
-      }.bind(this)
+      config: {
+        description: 'Get the last '+this.maxSize+' records seen',
+        tags: ['api'],
+        handler: function(req, reply){
+          // If you wanted to use the store you
+          // would do it as follows
+          /*
+          return store.asArray(req.query, function(err, records){
+            return reply(err || records);
+          });
+          */
+          return reply(this.records);
+        }.bind(this)
+      }
     },
     {
       // Of course, if we used the store this
@@ -45,11 +58,23 @@ var Test = function(options){
       // from the store
       method: 'GET',
       path: '/api/v1/test/records/count',
-      handler: function(req, reply){
-        return reply(this.records.length);
-      }.bind(this)
+      config: {
+        description: 'Get the number of records seen',
+        tags: ['api'],
+        handler: function(req, reply){
+          return reply(this.records.length);
+        }.bind(this)
+      }
     },
-  ])
+  ]);
+
+  options.ui.register([
+      {
+        path: '/test.html',
+        filename: path.resolve(__dirname, 'component.html'),
+        //contents: fs.readFileSync(path.resolve(__dirname, 'component.html')).toString(),
+      }
+    ]);
 };
 
 Test.prototype.push = function(record){
@@ -65,6 +90,8 @@ Test.prototype.push = function(record){
   if(this.records.length > this.maxSize){
     this.records = this.records.splice(this.records.length-this.maxSize, this.maxSize);
   }
+  this.sockets.emit('test::record', record);
+  //this.store.insert(record, noop);
 };
 
 module.exports = Test;

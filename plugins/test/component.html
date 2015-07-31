@@ -1,0 +1,15 @@
+<div>
+  <h1>Hello World</h1>
+  <pre id="latest"></pre>
+</div>
+<script>
+  var latest = document.querySelector('#latest');
+  var loop = function(){
+    latest.innerText = 'This\n  is\n    a\n  test';
+    setTimeout(function(){
+      latest.innerText = 'This\n  is\n    only\n  a\ntest';
+      setTimeout(loop, 1000);
+    }, 1000);
+  };
+  loop();
+</script>
