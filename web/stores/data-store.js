@@ -9,37 +9,7 @@ window.DataStore = Reflux.createStore({
   init: function() {
     this.listenTo(Actions.persistData, this.persist);
 
-    this._items = [{
-      id: _.uniqueId('message_'),
-      object: 'message',
-      from: 'evan@nylas.com',
-      subject: 'Hello World!',
-      unread: true
-    },{
-      id: _.uniqueId('message_'),
-      object: 'message',
-      from: 'ben@nylas.com',
-      subject: 'Hi from React Europe',
-      unread: true
-    },{
-      id: _.uniqueId('message_'),
-      object: 'message',
-      from: 'no-reply@airfrance.com',
-      subject: 'Your AirFrance Itinerary',
-      unread: false
-    },{
-      id: _.uniqueId('message_'),
-      object: 'message',
-      from: 'no-reply@hotels.com',
-      subject: 'Your Hotel Resevation',
-      unread: false
-    },{
-      id: _.uniqueId('contact_'),
-      object: 'contact',
-      name: 'Ben',
-      email: 'ben@nylas.com',
-      unread: true
-    }];
+    this._items = [];
   },
 
   itemsMatching: function(attributes) {

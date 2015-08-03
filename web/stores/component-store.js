@@ -10,7 +10,7 @@ window.ComponentStore = Reflux.createStore({
 
   findComponentsMatching: function(rule) {
     return this._items.filter(function(item){
-      return Support.equal(rule, item.rules);
+      return _.where([item.rules], rule).length > 0;
     }).map(function(item){
       return item.component;
     });
