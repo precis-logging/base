@@ -18,7 +18,8 @@ var Oplog = require('mongo-oplog');
 var Bus = require('./plugins/bus').Bus;
 
 var stores = require('./lib/stores');
-var webroot = path.join(__dirname, (config.web||{}).site||'/web/site');
+var webroot = path.join(__dirname, (config.web||{}).site||'/web');
+var bowerRoot = path.join(__dirname, (config.bower||{}).site||'/bower_components');
 var server = require('./lib/server');
 var sift = require('sift');
 
@@ -94,6 +95,24 @@ server.route([
       handler: {
         directory: {
           path: webroot
+        }
+      }
+    },
+    {
+      method: 'GET',
+      path: '/vendor/{param*}',
+      handler: {
+        directory: {
+          path: bowerRoot
+        }
+      }
+    },
+    {
+      method: 'GET',
+      path: '/vendor/babel/{param*}',
+      handler: {
+        directory: {
+          path: path.join(__dirname, './node_modules/babel-core/')
         }
       }
     },
