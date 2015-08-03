@@ -69,10 +69,19 @@ var Test = function(options){
   ]);
 
   options.ui.register([
+      // Register a test page
       {
         path: '/test.html',
         filename: path.resolve(__dirname, 'component.html'),
-        //contents: fs.readFileSync(path.resolve(__dirname, 'component.html')).toString(),
+      },
+      // Register some test components
+      {
+        components: [
+          {
+            name: 'test',
+            filename: path.resolve(__dirname, 'component.jsx'),
+          }
+        ]
       }
     ]);
 };

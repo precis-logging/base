@@ -8,8 +8,12 @@ window.ComponentStore = Reflux.createStore({
     this._showComponentRegions = false;
   },
 
-  findComponentsMatching: function(match) {
-    return this._items;
+  findComponentsMatching: function(rule) {
+    return this._items.filter(function(item){
+      return Support.equal(rule, item.rules);
+    }).map(function(item){
+      return item.component;
+    });
   },
 
   showComponentRegions: function() {
@@ -21,8 +25,11 @@ window.ComponentStore = Reflux.createStore({
     this.trigger();
   },
 
-  _onRegister: function(component) {
-    this._items.push(component);
+  _onRegister: function(component, rules) {
+    this._items.push({
+      component: component,
+      rules: rules
+    });
     this.trigger();
   },
 
