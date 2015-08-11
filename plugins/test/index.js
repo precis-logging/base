@@ -72,7 +72,7 @@ var Test = function(options){
       // Register a test page
       {
         path: '/test.html',
-        filename: path.resolve(__dirname, 'component.html'),
+        filename: path.resolve(__dirname, 'test.html'),
       },
       // Register some test components
       {
@@ -80,6 +80,17 @@ var Test = function(options){
           {
             name: 'test',
             filename: path.resolve(__dirname, 'component.jsx'),
+          }
+        ],
+      },
+      // Register some page routes with navigation
+      {
+        pages: [
+          {
+            route: '/test',
+            title: 'Test Page from Plugin',
+            name: 'Test',
+            filename: path.resolve(__dirname, 'page.jsx'),
           }
         ]
       }

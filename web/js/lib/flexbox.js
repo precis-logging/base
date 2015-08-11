@@ -18,7 +18,6 @@ Any additional props you set on the Flexbox are rendered.
 
     Flexbox.displayName = 'Flexbox';
 
-
     /*
     Public: React `props` supported by Flexbox:
 

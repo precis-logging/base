@@ -13,6 +13,7 @@
 
     <!-- Bootstrap -->
     <link href="/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/styles/dashboard.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -22,12 +23,10 @@
     <![endif]-->
   </head>
   <body>
-    <div id="application"></div>
-
     <!-- Dependency Javascript -->
     <script src="/vendor/react/react-with-addons.js"></script>
     <script src="/vendor/react/JSXTransformer.js"></script>
-    <script src="/vendor/react-router/build/umd/ReactRouter.min.js"></script>
+    <script src="/vendor/react-router/build/umd/ReactRouter.js"></script>
     <script src="/vendor/reflux/dist/reflux.min.js"></script>
     <script src="/vendor/underscore/underscore-min.js"></script>
     <script src="/vendor/babel/browser.js"></script>
@@ -49,6 +48,8 @@
     <script src="/stores/message-store.js"></script>
     <script src="/stores/component-store.js"></script>
 
+    <!=pages=/>
+    <script src="/pages/page2.jsx" type="text/babel"></script>
     <script src="/js/app.jsx" type="text/babel"></script>
   </body>
 </html>

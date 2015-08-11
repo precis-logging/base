@@ -92,21 +92,24 @@ If no matching components is found, the InjectedComponent renders an empty span.
     };
 
     InjectedComponentSet.prototype.render = function() {
-      var elements, exposedProps, flexboxClassName, flexboxProps, ref, ref1, ref2;
+      var elements, exposedProps, flexboxClassName, flexboxProps, ref, ref1, ref2, containerRequired, containerClassName;
+      containerClassName = (containerClassName = this.props.containerClassName) != null ? containerClassName : true;
+      containerRequired = (containerRequired = this.props.containerRequired) != null ? containerRequired : true;
       flexboxProps = _.omit(this.props, _.keys(this.constructor.propTypes));
       flexboxClassName = (ref = this.props.className) != null ? ref : "";
       exposedProps = (ref1 = this.props.exposedProps) != null ? ref1 : {};
       elements = this.state.components.map(function(component) {
-        if (component.containerRequired === false) {
-          return React.createElement("component", React.__spread({
-            "key": component.displayName
-          }, exposedProps));
-        } else {
-          return React.createElement(UnsafeComponent, React.__spread({
-            "component": component,
+        if ((containerRequired === false) ||
+            (component.containerRequired === false)) {
+          return React.createElement(component, React.__spread({
             "key": component.displayName
           }, exposedProps));
         }
+        return React.createElement(UnsafeComponent, React.__spread({
+          "component": component,
+          "key": component.displayName,
+          "className": containerClassName,
+        }, exposedProps));
       });
       if (this.state.visible) {
         flexboxClassName += " registered-region-visible";
@@ -121,7 +124,10 @@ If no matching components is found, the InjectedComponent renders an empty span.
           }
         }));
       }
-      return React.createElement(Flexbox, React.__spread({
+      var element = this.props.tagName?this.props.tagName:Flexbox;
+      //return React.createElement(Flexbox, React.__spread({
+      //return React.createElement('ul', React.__spread({
+      return React.createElement(element, React.__spread({
         "className": flexboxClassName
       }, flexboxProps), elements, (ref2 = this.props.children) != null ? ref2 : []);
     };
@@ -137,7 +143,6 @@ If no matching components is found, the InjectedComponent renders an empty span.
     };
 
     return InjectedComponentSet;
-
   })(React.Component);
 
 }).call(this);

@@ -53,7 +53,6 @@ location: 'composer-actions' (draft: <object>, ids: <array>)
     };
 
     return InjectedComponentLabel;
-
   })(React.Component);
 
 }).call(this);

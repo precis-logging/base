@@ -1,3 +1,4 @@
+require('babel-core/register');
 try{
   var memwatch = require('memwatch');
   var heapdump = require('heapdump');
@@ -66,6 +67,9 @@ var ui = new UI({
   ui: ui,
   bus: bus,
   sockets: io,
+  webroot: webroot,
+  bowerRoot: bowerRoot,
+  baseConfig: config,
 });
 
 var handlers = new Handlers({

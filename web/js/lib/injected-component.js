@@ -25,11 +25,24 @@ Section: Component Kit
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
+  var getComponentReactElement = function(options){
+      if (options.containerRequired === false) {
+        return React.createElement("component", React.__spread({
+          "ref": "inner",
+          "key": options.displayName
+        }, options.exposedProps));
+      }
+      return React.createElement(UnsafeComponent, React.__spread({
+        "ref": "inner",
+        "component": options.component,
+        "key": options.displayName
+      }, options.exposedProps));
+    };
+
   window.InjectedComponent = InjectedComponent = (function(superClass) {
     extend(InjectedComponent, superClass);
 
     InjectedComponent.displayName = 'InjectedComponent';
-
 
     /*
     Public: React `props` supported by InjectedComponent:
@@ -94,18 +107,31 @@ Section: Component Kit
         className += "registered-region-visible";
       }
       component = this.state.component;
+      console.log('InjectedComponent.prototype.render', component)
+      element = getComponentReactElement({
+        containerRequired: component.containerRequired,
+        displayName: component.displayName,
+        component: component,
+        exposedProps: exposedProps,
+      });
+
+      /* Replaced with above
       if (component.containerRequired === false) {
         element = React.createElement("component", React.__spread({
           "ref": "inner",
           "key": component.displayName
         }, exposedProps));
       } else {
-        element = React.createElement(UnsafeComponent, React.__spread({
-          "ref": "inner",
-          "component": component,
-          "key": component.displayName
-        }, exposedProps));
+        if (component.containerRequired !== false) {
+          element = React.createElement(UnsafeComponent, React.__spread({
+            "ref": "inner",
+            "component": component,
+            "key": component.displayName
+          }, exposedProps));
+        }
       }
+      //*/
+
       if (this.state.visible) {
         return React.createElement("div", {
           "className": className
@@ -116,11 +142,10 @@ Section: Component Kit
             clear: 'both'
           }
         }));
-      } else {
-        return React.createElement("div", {
-          "className": className
-        }, element);
       }
+      return React.createElement("div", {
+        "className": className
+      }, element);
     };
 
     InjectedComponent.prototype.focus = function() {
@@ -153,7 +178,6 @@ Section: Component Kit
     };
 
     return InjectedComponent;
-
   })(React.Component);
 
 }).call(this);

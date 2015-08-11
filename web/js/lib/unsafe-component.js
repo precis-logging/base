@@ -73,6 +73,7 @@ Section: Component Kit
       var ref;
       return React.createElement("div", {
         "name": "unsafe-component-wrapper",
+        "className": (this.props.className||''),
         "style": ((ref = this.props.component) != null ? ref.containerStyles : void 0)
       });
     };
@@ -98,7 +99,7 @@ Section: Component Kit
           stack = stack.substr(0, stackEnd);
         }
         element = React.createElement("div", {
-          "className": "unsafe-component-exception"
+          "className": "unsafe-component-exception "
         }, React.createElement("div", {
           "className": "message"
         }, this.props.component.displayName, " could not be displayed."), React.createElement("div", {
