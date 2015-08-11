@@ -78,8 +78,8 @@ var Test = function(options){
       {
         components: [
           {
-            name: 'test',
-            filename: path.resolve(__dirname, 'component.jsx'),
+            name: 'testComponents',
+            filename: path.resolve(__dirname, 'components.jsx'),
           }
         ],
       },
@@ -95,6 +95,11 @@ var Test = function(options){
         ]
       }
     ]);
+  // Yet more bad pracies, but for showing message emits its ok
+  var counter=0;
+  setInterval(function(){
+    this.sockets.emit('test::counter', counter++);
+  }.bind(this), 1000);
 };
 
 Test.prototype.push = function(record){

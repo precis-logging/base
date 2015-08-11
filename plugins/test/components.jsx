@@ -4,12 +4,29 @@ var {
 
 var TestWidget = React.createClass({
   displayName: 'Test Widget',
+  getInitialState(){
+    return {
+      value: 'Waiting'
+    };
+  },
+  updateCounter(counter){
+    this.setState({
+      value: counter
+    });
+  },
+  componentDidMount(){
+    socket.on('test::counter', this.updateCounter);
+  },
+  componentWillUnmount(){
+    socket.off('test::counter', this.updateCounter);
+  },
   render(){
     return (
       <div>
         <img src="http://placehold.it/200x200" />
         <h4>Test Widget</h4>
         <span className="text-muted">This is a basic test Widget</span>
+        <div>Counter: {this.state.value}</div>
       </div>
     );
   }
@@ -53,7 +70,7 @@ var TestSection = React.createClass({
 Actions.register(TestSection, {role: 'dashboard-section'});
 
 var DashboardLink = React.createClass({
-  displayName: 'Test Component',
+  displayName: 'Test Page',
   containerRequired: false,
   render(){
     return <li><a href="/#/test">Test Primary Nav</a></li>
@@ -61,3 +78,13 @@ var DashboardLink = React.createClass({
 });
 
 Actions.register(DashboardLink, {role: 'primary-nav-action'});
+
+var RemoteLink = React.createClass({
+  displayName: 'Test Remote Page',
+  containerRequired: false,
+  render(){
+    return <li><a href="/test.html">Test Local Page</a></li>
+  }
+});
+
+Actions.register(RemoteLink, {role: 'primary-nav-action'});

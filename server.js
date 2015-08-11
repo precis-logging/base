@@ -15,8 +15,8 @@ var handlersConfig = utils.defaults({handlers: []}, config).handlers;
 
 var UI = require('./lib/ui');
 
-var Oplog = require('mongo-oplog');
-var Bus = require('./plugins/bus').Bus;
+var busModule = config.bus.module || false;
+var Bus = busModule?require(busModule).Bus:false;
 
 var stores = require('./lib/stores');
 var webroot = path.join(__dirname, (config.web||{}).site||'/web');
@@ -57,7 +57,7 @@ try{
   logger.warn('MemWatch not installed');
 }
 
-var bus = new Bus(config.bus);
+var bus = Bus?new Bus(config.bus):false;
 
 var ui = new UI({
   logger: logger,
@@ -92,54 +92,19 @@ server.register({
   logger.info('Swagger interface loaded');
 });
 
-server.route([
-    {
-      method: 'GET',
-      path: '/{param*}',
-      handler: {
-        directory: {
-          path: webroot
-        }
-      }
-    },
-    {
-      method: 'GET',
-      path: '/vendor/{param*}',
-      handler: {
-        directory: {
-          path: bowerRoot
-        }
-      }
-    },
-    {
-      method: 'GET',
-      path: '/vendor/babel/{param*}',
-      handler: {
-        directory: {
-          path: path.join(__dirname, './node_modules/babel-core/')
-        }
-      }
-    },
-    {
-      method: 'GET',
-      path: '/api/v1/events/count',
-      handler: function(req, reply){
-        return reply(events);
-      }
-    },
-  ]);
+if(Bus){
+  bus.on('started', function(info){
+    logger.info('Attached to message bus.', info.ns?info.ns:info);
+  });
 
-bus.on('started', function(info){
-  logger.info('Attached to message bus.', info.ns?info.ns:info);
-});
+  bus.on('event', function(data){
+    handlers.push(data);
+    events++;
+  });
 
-bus.on('event', function(data){
-  handlers.push(data);
-  events++;
-});
+  bus.on('stopped', function(){
+    logger.info('Detached from message bus.');
+  });
 
-bus.on('stopped', function(){
-  logger.info('Detached from message bus.');
-});
-
-bus.start();
+  bus.start();
+}
