@@ -56,7 +56,7 @@ var DashboardLink = React.createClass({
   displayName: 'Test Component',
   containerRequired: false,
   render(){
-    return <li><a href="/#/test">Test</a></li>
+    return <li><a href="/#/test">Test Primary Nav</a></li>
   }
 });
 
