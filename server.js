@@ -15,7 +15,7 @@ var handlersConfig = utils.defaults({handlers: []}, config).handlers;
 
 var UI = require('./lib/ui');
 
-var busModule = config.bus.module || false;
+var busModule = (config.bus||{}).module || false;
 var Bus = busModule?require(busModule).Bus:false;
 
 var stores = require('./lib/stores');
