@@ -1,0 +1,26 @@
+{
+  "name": "precis-base",
+  "version": "0.0.1",
+  "authors": [
+    "Jeremy Darling <jeremy.darling@gmail.com>"
+  ],
+  "moduleType": [
+    "es6"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "async": "~1.4.0",
+    "bootstrap": "~3.3.5",
+    "react-router": "~0.13.3",
+    "react": "~0.13.3",
+    "reflux": "~0.2.11",
+    "underscore": "~1.8.3"
+  }
+}

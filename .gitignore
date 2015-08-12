@@ -1,4 +1,5 @@
 /node_modules
+/bower_components
 /logs
 logs/
 node_modules/
