@@ -50,26 +50,29 @@ Actions.register(TestWidget, {role: 'dashboard-widget'});
 
 var TestTable = React.createClass({
   render(){
+    var recs = (this.props.records||[]);
+    var len = recs.length;
+    var records = recs.reverse().map((item, index)=>{
+      return (
+        <tr key={index}>
+          <td>{len-index}</td>
+          <td>{item.event}</td>
+          <td>{item.counter}</td>
+        </tr>
+      );
+    });
     return (
       <div className="table-responsive">
         <table className="table table-striped">
           <thead>
             <tr>
               <th>#</th>
-              <th>Header</th>
-              <th>Header</th>
-              <th>Header</th>
-              <th>Header</th>
+              <th>Event</th>
+              <th>Counter</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>1,001</td>
-              <td>Lorem</td>
-              <td>ipsum</td>
-              <td>dolor</td>
-              <td>sit</td>
-            </tr>
+            {records}
           </tbody>
         </table>
       </div>
@@ -79,11 +82,35 @@ var TestTable = React.createClass({
 
 var TestSection = React.createClass({
   displayName: 'Test Section',
+  getInitialState(){
+    return {
+      records: []
+    };
+  },
+  updateState(TestStore){
+    var records = TestStore.items();
+    this.setState({
+      records: records.slice(Math.max(records.length-10, 0)),
+    });
+  },
+  componentDidMount(){
+    DataStore.getStore('TestStore', function(err, TestStore){
+      if(err){
+        alert(err);
+        return console.error(err);
+      }
+      this.unlisten = TestStore.listen(()=>this.updateState(TestStore));
+      this.updateState(TestStore);
+    }.bind(this));
+  },
+  componentWillUnmount(){
+    this.unlisten&&this.unlisten();
+  },
   render(){
     return (
       <div>
         <h2 className="sub-header">Test Section</h2>
-        <TestTable />
+        <TestTable records={this.state.records} />
       </div>
     );
   }

@@ -6,10 +6,12 @@ var addCommas=(x)=>{
 
 var TestTable = React.createClass({
   render(){
-    var records = (this.props.records||[]).reverse().map((item, index)=>{
+    var recs = (this.props.records||[]);
+    var len = recs.length;
+    var records = recs.reverse().map((item, index)=>{
       return (
         <tr key={index}>
-          <td>{index}</td>
+          <td>{len-index}</td>
           <td>{item.event}</td>
           <td>{item.counter}</td>
         </tr>
