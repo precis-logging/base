@@ -93,6 +93,23 @@ var Test = function(options){
             filename: path.resolve(__dirname, 'page.jsx'),
           }
         ]
+      },
+      // Register a Reflux datastore that picks up data
+      // from socket.io
+      {
+        stores: [
+          {
+            name: 'TestStore',
+            filter: {event: 'test-timer'},
+            socketEvent: {
+              event: 'test::counter',
+              reform: {
+                event: '"test-timer"',
+                counter: '$'
+              }
+            }
+          }
+        ]
       }
     ]);
   // Yet more bad pracies, but for showing message emits its ok

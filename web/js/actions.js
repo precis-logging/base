@@ -1,7 +1,4 @@
 window.Actions = Reflux.createActions([
-  // MessageStore
-  'selectMessage',
-
   // DataStore
   'persistData',
 

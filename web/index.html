@@ -3,7 +3,9 @@
 <!--
   Most of the idea for this UI was taken from
   https://nylas.com/blog/react-plugins and then adapted to be pure ES6 and React
-  without the use of any Coffeescript
+  without the use of any Coffeescript.
+
+  Source for the above is at https://github.com/nylas/component-store-example
 -->
   <head>
     <meta charset="utf-8">
@@ -27,7 +29,7 @@
     <script src="/vendor/react/react-with-addons.js"></script>
     <script src="/vendor/react/JSXTransformer.js"></script>
     <script src="/vendor/react-router/build/umd/ReactRouter.js"></script>
-    <script src="/vendor/reflux/dist/reflux.min.js"></script>
+    <script src="/vendor/reflux/dist/reflux.js"></script>
     <script src="/vendor/underscore/underscore-min.js"></script>
     <script src="/vendor/babel/browser.js"></script>
     <script src="/vendor/async/dist/async.js"></script>
@@ -43,9 +45,11 @@
     <script src="/js/lib/injected-component-set.js"></script>
     <script src="/js/lib/injected-component-label.js"></script>
     <script src="/js/lib/flexbox.js"></script>
+    <script src="/js/lib/lambda.js"></script>
+    <script src="/js/lib/reform.js"></script>
+    <script src="/js/lib/orm.js"></script>
 
     <script src="/stores/data-store.js"></script>
-    <script src="/stores/message-store.js"></script>
     <script src="/stores/component-store.js"></script>
 
     <!=pages=/>
