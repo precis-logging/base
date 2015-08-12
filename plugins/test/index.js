@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 
-var noop = function(){};
+var noop = ()=>{};
 
 var Test = function(options){
   // Create a local copy of the configuration
@@ -28,7 +28,7 @@ var Test = function(options){
         description: 'Get latest record seen',
         notes: 'These are the notes related to /api/v1/test/latest/record for SWAGGER documentation',
         tags: ['api'],
-        handler: function(req, reply){
+        handler(req, reply){
           return reply(this.latest);
         }.bind(this)
       }
@@ -39,7 +39,7 @@ var Test = function(options){
       config: {
         description: 'Get the last '+this.maxSize+' records seen',
         tags: ['api'],
-        handler: function(req, reply){
+        handler(req, reply){
           // If you wanted to use the store you
           // would do it as follows
           /*
@@ -61,8 +61,23 @@ var Test = function(options){
       config: {
         description: 'Get the number of records seen',
         tags: ['api'],
-        handler: function(req, reply){
+        handler(req, reply){
           return reply(this.records.length);
+        }.bind(this)
+      }
+    },
+    {
+      // Of course, if we used the store this
+      // would all have to change to support
+      // getting the number of records
+      // from the store
+      method: 'GET',
+      path: '/api/v1/test/counter',
+      config: {
+        description: 'Get the internal counter',
+        tags: ['api'],
+        handler(req, reply){
+          return reply(counter);
         }.bind(this)
       }
     },
@@ -98,6 +113,9 @@ var Test = function(options){
       // from socket.io
       {
         stores: [
+          // It would actually be more useful to define a
+          // DataStore around test::record, but this gives
+          // us an easy to show off consistent source
           {
             name: 'TestStore',
             filter: {event: 'test-timer'},
