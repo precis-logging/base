@@ -28,7 +28,7 @@ var Test = function(options){
         description: 'Get latest record seen',
         notes: 'These are the notes related to /api/v1/test/latest/record for SWAGGER documentation',
         tags: ['api'],
-        handler(req, reply){
+        handler: function(req, reply){
           return reply(this.latest);
         }.bind(this)
       }
@@ -39,7 +39,7 @@ var Test = function(options){
       config: {
         description: 'Get the last '+this.maxSize+' records seen',
         tags: ['api'],
-        handler(req, reply){
+        handler: function(req, reply){
           // If you wanted to use the store you
           // would do it as follows
           /*
@@ -61,7 +61,7 @@ var Test = function(options){
       config: {
         description: 'Get the number of records seen',
         tags: ['api'],
-        handler(req, reply){
+        handler: function(req, reply){
           return reply(this.records.length);
         }.bind(this)
       }
@@ -76,7 +76,7 @@ var Test = function(options){
       config: {
         description: 'Get the internal counter',
         tags: ['api'],
-        handler(req, reply){
+        handler: function(req, reply){
           return reply(counter);
         }.bind(this)
       }
