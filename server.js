@@ -11,7 +11,7 @@ var logger = require('./lib/logger');
 
 var utils = require('./lib/utils');
 var config = require('./lib/config');
-var handlersConfig = utils.defaults({handlers: []}, config).handlers;
+var handlersConfig = utils.defaults({plugins: []}, config).plugins;
 
 var UI = require('./lib/ui');
 

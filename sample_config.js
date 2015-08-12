@@ -18,7 +18,7 @@ module.exports = {
       // be processed
       //startTime: 1,
     },
-    handlers: [
+    plugins: [
       {
         // Set a module name to have the module npm installed
         // and used for you
