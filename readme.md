@@ -48,6 +48,10 @@ Plugins are used to extend the functionality available in the UI and/or the back
 
 It modifies the UI by adding dashboard widgets, sections, new pages, stand alone pages, and events pushed to a server configured Reflux store.
 
+Plugins are configured for use in the config.js file inside the plugins array.  Each plugin will get its configuration passed to it from this entry as well.  As config.js is a plain old javascript file it may be better to put each plugin entry into its own file with a module.exports statement and then simply require that configuration file into the main configuration file's plugins section.
+
+No plugin will be loaded that is not configured.
+
 ##Tests
 
 Testing is already setup to use Mocha using "npm test" as this is a base framework there are no tests provided with it by default.  Still need to setup UI testing.
