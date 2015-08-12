@@ -4,6 +4,23 @@
 // For the purposes of this example, it just stores objects
 // in a flat array.
 //
+
+var prefetchData = function(storeConfig, r){
+  if(storeConfig.socketEvent.prefetch){
+    Loader.get(storeConfig.socketEvent.prefetch, function(err, records){
+      if(err){
+        return console.error(err);
+      }
+      records.forEach(function(record){
+        if(r){
+          return DataStore.persist(r.reform(record));
+        }
+        DataStore.persist(record);
+      });
+    });
+  }
+};
+
 var setupDataStores = function(){
   Loader.get('/api/v1/ui/stores', function(err, stores){
     if(err){
@@ -14,14 +31,16 @@ var setupDataStores = function(){
       DataStore.createStore(storeConfig.name, storeConfig.filter);
       if(storeConfig.socketEvent && storeConfig.socketEvent.event){
         if(!storeConfig.socketEvent.reform){
-          return socket.on(storeConfig.socketEvent.event, function(data){
+          socket.on(storeConfig.socketEvent.event, function(data){
             DataStore.persist(data);
           });
+          return prefetchData(storeConfig);
         }
         var r = new Reform(storeConfig.socketEvent.reform);
         socket.on(storeConfig.socketEvent.event, function(data){
           DataStore.persist(r.reform(data));
         });
+        return prefetchData(storeConfig, r);
       }
     });
     DataStore._ready = true;

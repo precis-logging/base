@@ -18,6 +18,7 @@ var Test = function(options){
   // but for this simple example we will
   // just use an array
   this.records = [];
+  this.counters = [];
 
   // Setup some routes on the web server
   options.server.route([
@@ -77,7 +78,22 @@ var Test = function(options){
         description: 'Get the internal counter',
         tags: ['api'],
         handler: function(req, reply){
-          return reply(counter);
+          return reply(this.counters[this.counters.length?this.counters.length-1:0]||-1);
+        }.bind(this)
+      }
+    },
+    {
+      // Of course, if we used the store this
+      // would all have to change to support
+      // getting the number of records
+      // from the store
+      method: 'GET',
+      path: '/api/v1/test/counters',
+      config: {
+        description: 'Get the internal counter',
+        tags: ['api'],
+        handler: function(req, reply){
+          return reply(this.counters);
         }.bind(this)
       }
     },
@@ -121,6 +137,7 @@ var Test = function(options){
             filter: {event: 'test-timer'},
             socketEvent: {
               event: 'test::counter',
+              prefetch: '/api/v1/test/counters',
               reform: {
                 event: '"test-timer"',
                 counter: '$'
@@ -134,6 +151,10 @@ var Test = function(options){
   var counter=0;
   setInterval(function(){
     this.sockets.emit('test::counter', counter++);
+    this.counters.push(counter);
+    if(this.counters.length > this.maxSize){
+      this.counters = this.counters.splice(this.counters.length-this.maxSize, this.maxSize);
+    }
   }.bind(this), 1000);
 };
 
