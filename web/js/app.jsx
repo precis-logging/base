@@ -16,7 +16,7 @@ var Nav = React.createClass({
             <span className="icon-bar"></span>
             <span className="icon-bar"></span>
           </button>
-          <a className="navbar-brand" href="#">Precis Dashboard</a>
+          <a className="navbar-brand" href="#">{CONFIG.name}</a>
         </div>
         <div id="navbar" className="navbar-collapse collapse">
           <InjectedComponentSet
@@ -25,7 +25,7 @@ var Nav = React.createClass({
             className='nav navbar-nav navbar-right'
             matching={{role: 'primary-nav-action'}} />
 
-          {/*
+          {/*// Add this back in if you want search
           <form className="navbar-form navbar-right">
             <input type="text" className="form-control" placeholder="Search..." />
           </form>

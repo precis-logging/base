@@ -90,7 +90,7 @@ var Test = function(options){
       method: 'GET',
       path: '/api/v1/test/counters',
       config: {
-        description: 'Get the internal counter',
+        description: 'Get the last '+this.maxSize+' counters',
         tags: ['api'],
         handler: function(req, reply){
           return reply(this.counters);

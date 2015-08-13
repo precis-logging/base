@@ -76,6 +76,8 @@ example.
 You can change this in the configuration or in the served.js if you don't like
 it.
 
+Most of the concepts in the UI are from this blog article https://nylas.com/blog/react-plugins the basic idea was converted from Coffeescript over to JSX and then updated/modified to work for this base project.  The origional source can be found at https://github.com/nylas/component-store-example
+
 ##API
 
 API Documentation is provided by Hapi-Swagger as long as you define your plugin routes properly.  Take a look at the test plugin to see how to setup routes properly to support builtin documentation.  Documenation is provided via the /documentation route.
