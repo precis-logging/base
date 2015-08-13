@@ -6,6 +6,16 @@ module.exports = {
     store: {
       module: 'prodio-memory-store',
     },
+    ui: {
+      // UI configuration values
+      // These get sent to the UI for rendering
+      //   title sets the page title
+      //   name sets the name in the top left corner
+      config: {
+        title: 'Precis Test Dashboard',
+        name: 'Base Precis Dashboard',
+      }
+    },
     bus: {
       // bus module to load
       module: './plugins/bus',
