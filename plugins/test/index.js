@@ -111,7 +111,7 @@ var Test = function(options){
           {
             name: 'testComponents',
             filename: path.resolve(__dirname, 'components.jsx'),
-          }
+          },
         ],
       },
       // Register some page routes with navigation
