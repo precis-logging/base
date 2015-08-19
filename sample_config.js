@@ -42,6 +42,13 @@ module.exports = {
           msgPrefix: 'First Record:'
         }
       },
+      // Some other sample plugins
+      {
+        location: './plugins/d3',
+      },//*/
+      {
+        location: './plugins/d3rrc',
+      },//*/
     ],
   },
   // You can name configuration's whatever you want
