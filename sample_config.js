@@ -44,10 +44,10 @@ module.exports = {
       },
       // Some other sample plugins
       {
-        location: './plugins/d3',
+        location: './plugins/d3-test',
       },//*/
       {
-        location: './plugins/d3rrc',
+        location: './plugins/d3rrc-test',
       },//*/
     ],
   },
