@@ -3,6 +3,7 @@ var {
   Route,
   DefaultRoute,
   Link,
+  NotFoundRoute,
 } = ReactRouter;
 
 var Nav = React.createClass({
@@ -86,7 +87,9 @@ var PageLayout = React.createClass({
       return secs;
     }, {default: [<li key="default"><Link to="/">Dashboard</Link></li>]});
     var sections = Object.keys(sectionsInfo).map(function(sectionTitle, index){
+      var title = sectionTitle === 'default'?'':sectionTitle;
       return (<ul className="nav nav-sidebar" key={"section"+index}>
+        {title}
         {sectionsInfo[sectionTitle]}
       </ul>);
     });
@@ -106,6 +109,26 @@ var PageLayout = React.createClass({
   }
 });
 
+var RouteNotFound = React.createClass({
+  render(){
+    return (
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="error-template">
+              <h1>Oops!</h1>
+              <h2>404 Not Found</h2>
+              <div class="error-details">
+                Sorry, an error has occured, Requested page not found!
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+});
+
 Loader.get('/api/v1/ui/pages', function(err, pages){
   if(err){
     return alert('/api/v1/ui/components '+err.toString());
@@ -117,8 +140,9 @@ Loader.get('/api/v1/ui/pages', function(err, pages){
     Support.loadComponents(components);
     var pgs = [
       <DefaultRoute name="dashboard" handler={Dashboard} key="defualt"/>,
+      <NotFoundRoute handler={RouteNotFound}/>,
     ].concat(pages.map(function(page){
-      return <Route name={page.path} handler={window[page.componentName]} key={page.componentName} />
+      return <Route name={page.path} handler={PagesStore.page(page.componentName)} key={page.componentName} />
     }));
     var routes = (
           <Route path="/" handler={PageLayout}>

@@ -1,11 +1,12 @@
 var path = require('path');
 var fs = require('fs');
-var defaults = require('./utils').defaults;
+var defaults = require('../../lib/utils').defaults;
+
 var indexPageHandler = function(req, reply){
   fs.readFile(this.indexPageLocation, function(err, raw){
     var source = raw.toString();
     var pageLinks = this.pages.map(function(page){
-      return `<script type="text/babel" src="${page.path}"></script>`;
+      return '<script type="text/babel" src="'+page.path+'"></script>';
     }).join('\n    ').trim();
     var headers = this.headers.join('\n    ').trim();
     var tokens = defaults({
@@ -13,11 +14,12 @@ var indexPageHandler = function(req, reply){
       headers: headers,
     }, this.config.ui);
     var page = source.replace(/<!=([a-z0-9_\-]+?)=>/gi, function(full, token){
-      return tokens[token]||token;
+      return tokens[token];
     });
     return reply(page);
   }.bind(this));
 };
+
 var configHandler = function(req, reply){
   return reply('window.CONFIG='+JSON.stringify(this)+';');
 };

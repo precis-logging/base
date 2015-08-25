@@ -80,4 +80,4 @@ var Test = React.createClass({
   }
 });
 
-window.Test = Test;
+Pages.register('Test', Test);

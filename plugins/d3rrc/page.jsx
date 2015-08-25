@@ -74,4 +74,4 @@ var Page = React.createClass({
   }
 });
 
-window.D3RRCPage = Page;
+Pages.register('D3RRCPage', Page);

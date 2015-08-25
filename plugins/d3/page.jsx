@@ -82,4 +82,4 @@ var D3Page = React.createClass({
   }
 });
 
-window.D3Page = D3Page;
+Pages.register('D3Page', D3Page);

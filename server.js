@@ -13,7 +13,8 @@ var utils = require('./lib/utils');
 var config = require('./lib/config');
 var handlersConfig = utils.defaults({plugins: []}, config).plugins;
 
-var UI = require('./lib/ui');
+var uiConfig = utils.defaults({ui: {module: './plugins/ui'}}, config).ui;
+var UI = require(uiConfig.module);
 
 var busModule = (config.bus||{}).module || false;
 var Bus = busModule?require(busModule).Bus:false;
@@ -59,7 +60,7 @@ try{
 
 var bus = Bus?new Bus(config.bus):false;
 
-var ui = new UI({
+var ui = new UI(utils.defaults({
   logger: logger,
   config: config.ui,
   server: server,
@@ -70,7 +71,7 @@ var ui = new UI({
   webroot: webroot,
   bowerRoot: bowerRoot,
   baseConfig: config,
-});
+}, uiConfig));
 
 var handlers = new Handlers({
   logger: logger,
@@ -93,6 +94,10 @@ server.register({
 });
 
 if(Bus){
+  bus.on('error', function(error){
+    logger.error(error);
+  });
+
   bus.on('started', function(info){
     logger.info('Attached to message bus.', info.ns?info.ns:info);
   });
