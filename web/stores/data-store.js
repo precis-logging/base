@@ -5,11 +5,44 @@
 // in a flat array.
 //
 
-var prefetchData = function(storeConfig, r){
-  if(storeConfig.socketEvent.prefetch){
-    Loader.get(storeConfig.socketEvent.prefetch, function(err, records){
+var fetchAll = function(options, callback){
+  var from = options.url;
+  var limit = options.limit;
+  var results = [];
+  var parts = from.split('?');
+  var options = (parts.length>1)?parts.pop().split('&'):[];
+  var fetchBlock = function(offset){
+    var url = from+'?'+options.concat(['offset='+offset]).join('&');
+    Loader.get(url, function(err, records){
       if(err){
-        return console.error(err);
+        return callback(err);
+      }
+      if(records.items && records.items.length){
+        results = results.concat(records.items);
+        if(limit && (results.length >= limit)){
+          return callback(null, results.slice(0, limit));
+        }
+        return fetchBlock(offset+records.items.length);
+      }
+      return callback(null, results);
+    });
+  };
+  fetchBlock(0);
+};
+
+var prefetchData = function(storeConfig, r, callback){
+  if(typeof(r)==='function'){
+    callback = r;
+    r = null;
+  }
+  if(storeConfig.socketEvent.prefetch){
+    fetchAll({url: storeConfig.socketEvent.prefetch, limit: storeConfig.limit}, function(err, records){
+      if(err){
+        console.error(err);
+        return (callback||noop)(err);
+      }
+      if(!records){
+        return (callback||noop)();
       }
       records.forEach(function(record){
         if(r){
@@ -17,6 +50,7 @@ var prefetchData = function(storeConfig, r){
         }
         DataStore.persist(record);
       });
+      return (callback||noop)(null, records);
     });
   }
 };
@@ -27,23 +61,28 @@ var setupDataStores = function(){
       alert(err);
       return console.error(err);
     }
-    stores.forEach(function(storeConfig){
-      DataStore.createStore(storeConfig.name, storeConfig.filter);
+    async.each(stores, function(storeConfig, next){
+      var store = DataStore.createStore(storeConfig);
       if(storeConfig.socketEvent && storeConfig.socketEvent.event){
         if(!storeConfig.socketEvent.reform){
           socket.on(storeConfig.socketEvent.event, function(data){
             DataStore.persist(data);
           });
-          return prefetchData(storeConfig);
+          return prefetchData(storeConfig, function(){
+            next();
+          });
         }
         var r = new Reform(storeConfig.socketEvent.reform);
         socket.on(storeConfig.socketEvent.event, function(data){
           DataStore.persist(r.reform(data));
         });
-        return prefetchData(storeConfig, r);
+        return prefetchData(storeConfig, r, function(){
+          next();
+        });
       }
+    }, function(){
+      DataStore._ready = true;
     });
-    DataStore._ready = true;
   });
 };
 
@@ -62,13 +101,17 @@ window.DataStore = Reflux.createStore({
   },
 
   persist: function(model){
-    var idx = _.findIndex(this._items, _.matcher({id: model.id}));
+    var idx = model._id?_.findIndex(this._items, _.matcher({_id: model._id})):
+              _.findIndex(this._items, _.matcher({id: model.id}));
     (idx !== -1)?this._items[idx] = model:this._items.push(model);
 
     this.trigger();
   },
 
-  createStore: function(name, filter){
+  createStore: function(options){
+    var name = options.name;
+    var filter = options.filter;
+    var limit = options.limit;
     var Store = this._stores[name];
     if(Store){
       throw new Error('Store "'+name+'" already exsits!');
@@ -88,6 +131,9 @@ window.DataStore = Reflux.createStore({
       onDataChange: function(){
         this._items = DataStore.itemsMatching(filter);
         this._latest = this._items[this._items.length-1];
+        if(limit && (this._items.length > limit)){
+          this._items = this._items.slice(this._items.length-limit, limit);
+        }
         this.trigger();
       }
     });

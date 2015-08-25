@@ -140,7 +140,7 @@ Loader.get('/api/v1/ui/pages', function(err, pages){
     Support.loadComponents(components);
     var pgs = [
       <DefaultRoute name="dashboard" handler={Dashboard} key="defualt"/>,
-      <NotFoundRoute handler={RouteNotFound}/>,
+      <NotFoundRoute handler={RouteNotFound} key="notFoundRoute"/>,
     ].concat(pages.map(function(page){
       return <Route name={page.path} handler={PagesStore.page(page.componentName)} key={page.componentName} />
     }));

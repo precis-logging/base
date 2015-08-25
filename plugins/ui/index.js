@@ -104,7 +104,7 @@ var UI = function(options){
       path: '/vendor/babel/{param*}',
       handler: {
         directory: {
-          path: path.join(__dirname, '../node_modules/babel-core/')
+          path: path.join(__dirname, '../../node_modules/babel-core/')
         }
       }
     },
