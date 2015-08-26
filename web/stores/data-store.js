@@ -17,6 +17,9 @@ var fetchAll = function(options, callback){
       if(err){
         return callback(err);
       }
+      if(records instanceof Array){
+        return callback(null, records);
+      }
       if(records.items && records.items.length){
         results = results.concat(records.items);
         if(limit && (results.length >= limit)){
@@ -48,6 +51,7 @@ var prefetchData = function(storeConfig, r, callback){
         return (callback||noop)();
       }
       records.forEach(function(record){
+        record._type = storeConfig.name;
         if(r){
           return DataStore.persist(r.reform(record));
         }
@@ -70,6 +74,7 @@ var setupDataStores = function(){
       if(storeConfig.socketEvent && storeConfig.socketEvent.event){
         if(!storeConfig.socketEvent.reform){
           socket.on(storeConfig.socketEvent.event, function(data){
+            data._type = storeConfig.name;
             DataStore.persist(data);
           });
           return prefetchData(storeConfig, function(){
@@ -78,6 +83,7 @@ var setupDataStores = function(){
         }
         var r = new Reform(storeConfig.socketEvent.reform);
         socket.on(storeConfig.socketEvent.event, function(data){
+          data._type = storeConfig.name;
           DataStore.persist(r.reform(data));
         });
         return prefetchData(storeConfig, r, function(){
@@ -118,7 +124,7 @@ window.DataStore = Reflux.createStore({
 
   createStore: function(options){
     var name = options.name;
-    var filter = options.filter;
+    var filter = options.filter||{_type: options.name};
     var limit = options.limit;
     var Store = this._stores[name];
     if(Store){
