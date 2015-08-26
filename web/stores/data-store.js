@@ -35,8 +35,11 @@ var prefetchData = function(storeConfig, r, callback){
     callback = r;
     r = null;
   }
+  if(!storeConfig.socketEvent){
+    return (callback||noop)(null, []);
+  }
   if(storeConfig.socketEvent.prefetch){
-    fetchAll({url: storeConfig.socketEvent.prefetch, limit: storeConfig.limit}, function(err, records){
+    return fetchAll({url: storeConfig.socketEvent.prefetch, limit: storeConfig.limit}, function(err, records){
       if(err){
         console.error(err);
         return (callback||noop)(err);
@@ -53,6 +56,7 @@ var prefetchData = function(storeConfig, r, callback){
       return (callback||noop)(null, records);
     });
   }
+  return (callback||noop)(null, []);
 };
 
 var setupDataStores = function(){
@@ -80,7 +84,11 @@ var setupDataStores = function(){
           next();
         });
       }
-    }, function(){
+      return next();
+    }, function(err){
+      if(err){
+        console.error(err);
+      }
       DataStore._ready = true;
     });
   });
