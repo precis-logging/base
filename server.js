@@ -9,7 +9,7 @@ var path = require('path');
 
 var logger = require('./lib/logger');
 
-var utils = require('./lib/utils');
+var utils = require('precis-utils');
 var config = require('./lib/config');
 var handlersConfig = utils.defaults({plugins: []}, config).plugins;
 

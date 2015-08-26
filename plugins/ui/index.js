@@ -1,6 +1,6 @@
 var path = require('path');
 var fs = require('fs');
-var defaults = require('../../lib/utils').defaults;
+var defaults = require('precis-utils').defaults;
 
 var indexPageHandler = function(req, reply){
   fs.readFile(this.indexPageLocation, function(err, raw){
