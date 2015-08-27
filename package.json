@@ -36,6 +36,7 @@
     "precis-utils": "0.0.1",
     "sift": "1.1.0",
     "socket.io": "1.3.6",
+    "socket.io-client": "^1.3.6",
     "vision": "^3.0.0"
   }
 }
