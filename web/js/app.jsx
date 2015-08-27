@@ -6,6 +6,113 @@ var {
   NotFoundRoute,
 } = ReactRouter;
 
+var escapeHTML = window.escapeHTML = (function(){
+  var div = document.createElement('div');
+  return function(str){
+    div.innerHTML = '';
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  };
+})();
+
+var objStr = {}.toString();
+
+var JSONNode = window.JSONNode = React.createClass({
+  makeTreeFrom(obj, lvl){
+    var styles = {
+      object: {
+        color: 'blue',
+      },
+      array: {
+        color: 'darkorange',
+      },
+      string: {
+        color: 'green',
+      },
+      number: {
+        color: 'brown',
+      },
+      boolean: {
+        color: 'blueviolet',
+      },
+      key: {
+        color: '#333333',
+      },
+    };
+    var level = lvl || 0;
+    var keys = Object.keys(obj);
+    var isArray = Array.isArray(obj);
+    var prefix = isArray?'[':'{';
+    var postfix = isArray?']':'}';
+    var listStyle = {
+        listStyle: 'none',
+        padding: 0,
+        margin: 0,
+        fontFamily: 'monospace',
+      };
+    var itemStyle = {
+        paddingLeft: '1.25em',
+      };
+    var reformItem = function(key, value, isLast){
+        var type = typeof(value);
+        var ekey = '"'+escapeHTML(key)+'"';
+        var postfix = isLast?<span style={{display: 'none'}} />:',';
+        if(Array.isArray(value)){
+          return <li style={itemStyle} className="sub-node" key={key}><span style={styles.key}>{ekey}</span>: <span style={styles.array}>{this.makeTreeFrom(value, level+1)}</span>{postfix}</li>;
+        }
+        if((value === null) || (value === undefined)){
+          value = ''+value;
+          return <li style={itemStyle} className="sub-node" key={key}><span style={styles.key}>{ekey}</span>: <span  style={styles[type]}>{escapeHTML(value)}</span>{postfix}</li>;
+        }
+        if((type === 'object') && (value.toString()===objStr)){
+          return <li style={itemStyle} className="sub-node" key={key}><span style={styles.key}>{ekey}</span>: <span  style={styles[type]}>{this.makeTreeFrom(value, level+1)}</span>{postfix}</li>;
+        }
+        if(type==='string'){
+          value = '"'+value+'"';
+        }
+        return <li style={itemStyle} className="sub-node" key={key}><span style={styles.key}>{ekey}</span>: <span  style={styles[type]}>{escapeHTML(value)}</span>{postfix}</li>;
+      }.bind(this);
+    var reformArray = function(key, value, isLast){
+      var type = typeof(value);
+      var postfix = isLast?<span style={{display: 'none'}} />:',';
+      if(Array.isArray(value)){
+        return <li style={itemStyle} className="sub-node" key={key}><span style={styles.array}>{this.makeTreeFrom(value, level+1)}</span>{postfix}</li>;
+      }
+      if((type === 'object') && (value.toString()===objStr)){
+        return <li style={itemStyle} className="sub-node" key={key}><span  style={styles[type]}>{this.makeTreeFrom(value, level+1)}</span>{postfix}</li>;
+      }
+      if(type==='string'){
+        value = '"'+value+'"';
+      }
+      return <li style={itemStyle} className="sub-node" key={key}><span  style={styles[type]}>{escapeHTML(value)}</span>{postfix}</li>;
+    }.bind(this);
+    var items = isArray?obj.map((item, index, arr)=>reformArray(index, item, arr.length-1 === index)):keys.map((key, index, arr)=>reformItem(key, obj[key], arr.length-1 === index));
+
+    return (
+      <span className={'json-node'} style={styles[(Array.isArray(obj)?'array':typeof(obj))]}>
+        {prefix}
+        <ul style={listStyle}>
+          {items}
+        </ul>
+        {postfix}
+      </span>
+    );
+  },
+  render(){
+    var obj = this.props.obj;
+    var tree = this.makeTreeFrom(obj);
+    return (
+      <div style={{fontFamily: 'monospace'}}>
+        {tree}
+      </div>
+    );
+  }
+});
+
+var published = function(page){
+  return page.path.indexOf('/:')===-1;
+};
+
 var Nav = React.createClass({
   render(){
     return (<nav className="navbar navbar-inverse navbar-fixed-top">
@@ -75,7 +182,7 @@ var PageLayout = React.createClass({
   },
   render(){
     var pages = this.props.pages||[];
-    var sectionsInfo = pages.reduce(function(secs, curr){
+    var sectionsInfo = pages.filter(published).reduce(function(secs, curr){
       var section = curr.section || 'default';
       var key = curr.componentName;
       var {
