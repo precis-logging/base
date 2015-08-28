@@ -58,7 +58,7 @@ Bus.prototype.start = function(){
         }.bind(this));
 
   opLog.on('insert', function(doc){
-    this.emit('event', doc.o);
+    this.emit('event', doc);
   }.bind(this));
   opLog.on('error', function(err){
     this.emit('error', err);
