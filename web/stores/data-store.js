@@ -134,20 +134,24 @@ window.DataStore = Reflux.createStore({
       init: function(){
         this.listenTo(DataStore, this.onDataChange);
         this._items = DataStore.itemsMatching(filter);
-        this._latest= 'Waiting';
+        //this._latest= 'Waiting';
       },
       items: function(){
         return this._items;
       },
+      /*
       latest: function(){
         return this._latest.counter;
       },
+      */
       onDataChange: function(){
         this._items = DataStore.itemsMatching(filter);
+        /*
         this._latest = this._items[this._items.length-1];
         if(limit && (this._items.length > limit)){
           this._items = this._items.slice(this._items.length-limit, limit);
         }
+        */
         this.trigger();
       }
     });
