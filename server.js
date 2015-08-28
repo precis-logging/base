@@ -62,7 +62,7 @@ stores.on('error', function(err){
   logger.error(err);
 });
 
-stores.on('ready', function(){
+stores.ready(function(){
   var bus = Bus?new Bus(config.bus):false;
 
   var ui = new UI(utils.defaults({
