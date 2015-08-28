@@ -58,58 +58,65 @@ try{
   logger.warn('MemWatch not installed');
 }
 
-var bus = Bus?new Bus(config.bus):false;
-
-var ui = new UI(utils.defaults({
-  logger: logger,
-  config: config.ui,
-  server: server,
-  stores: stores,
-  ui: ui,
-  bus: bus,
-  sockets: io,
-  webroot: webroot,
-  bowerRoot: bowerRoot,
-  baseConfig: config,
-}, uiConfig));
-
-var handlers = new Handlers({
-  logger: logger,
-  config: handlersConfig,
-  server: server,
-  stores: stores,
-  ui: ui,
-  bus: bus,
-  sockets: io,
+stores.on('error', function(err){
+  logger.error(err);
 });
 
-server.register({
-  register: HapiSwagger,
-  options: utils.defaults({swagger: {apiVersion: 'v1'}}, config).swagger
-}, function(err){
-  if(err){
-    return logger.error(err);
+stores.on('ready', function(){
+  var bus = Bus?new Bus(config.bus):false;
+
+  var ui = new UI(utils.defaults({
+    logger: logger,
+    config: config.ui,
+    server: server,
+    stores: stores,
+    ui: ui,
+    bus: bus,
+    sockets: io,
+    webroot: webroot,
+    bowerRoot: bowerRoot,
+    baseConfig: config,
+  }, uiConfig));
+
+  var handlers = new Handlers({
+    logger: logger,
+    config: handlersConfig,
+    server: server,
+    stores: stores,
+    ui: ui,
+    bus: bus,
+    sockets: io,
+  });
+
+  server.register({
+    register: HapiSwagger,
+    options: utils.defaults({swagger: {apiVersion: 'v1'}}, config).swagger
+  }, function(err){
+    if(err){
+      return logger.error(err);
+    }
+    logger.info('Swagger interface loaded');
+  });
+
+  if(Bus){
+    bus.on('error', function(error){
+      logger.error(error);
+    });
+
+    bus.on('started', function(info){
+      logger.info('Attached to message bus.', info.ns?info.ns:info);
+    });
+
+    bus.on('event', function(data){
+      handlers.push(data);
+      events++;
+    });
+
+    bus.on('stopped', function(){
+      logger.info('Detached from message bus.');
+    });
+
+    bus.start();
   }
-  logger.info('Swagger interface loaded');
+
 });
-
-if(Bus){
-  bus.on('error', function(error){
-    logger.error(error);
-  });
-
-  bus.on('started', function(info){
-    logger.info('Attached to message bus.', info.ns?info.ns:info);
-  });
-
-  bus.on('event', function(data){
-    handlers.push(data);
-    events++;
-  });
-
-  bus.on('stopped', function(){
-    logger.info('Detached from message bus.');
-  });
-
-  bus.start();
-}
