@@ -49,6 +49,7 @@ var getOplogConfig = function(options){
 Bus.prototype.start = function(){
   var options = this.options;
   var oplogConfig = getOplogConfig(options);
+  var firstRecord = true;
 
   var opLog = Oplog(oplogConfig.connectionString,
           oplogConfig.config)
@@ -58,6 +59,10 @@ Bus.prototype.start = function(){
         }.bind(this));
 
   opLog.on('insert', function(doc){
+    if(firstRecord){
+      logger.info('First record from bus');
+    }
+    firstRecord = false;
     this.emit('event', doc);
   }.bind(this));
   opLog.on('error', function(err){
