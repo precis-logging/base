@@ -22,12 +22,16 @@ var TestWidget = React.createClass({
         return console.error(err);
       }
       this.unlisten = TestStore.listen(()=>{
+        var items = TestStore.items();
+        var latest = items.length?items[items.length-1]:{counter: 'Waiting...'};
         this.setState({
-          value: TestStore.latest()
+          value: latest.counter
         });
       });
+      var items = TestStore.items();
+      var latest = items.length?items[items.length-1]:{counter: 'Waiting...'};
       this.setState({
-        value: TestStore.latest()
+        value: latest.counter
       });
     }.bind(this));
   },

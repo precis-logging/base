@@ -1,12 +1,9 @@
 var fs = require('fs');
 var path = require('path');
 
-var D3 = function(options){
-  var server = options.server;
-  var ui = options.ui;
-  var filename = path.resolve(__dirname, 'd3.js');
-
-  server.route([
+var routes = function(){
+  var filename = this.filename;
+  return [
     {
       method: 'GET',
       path: '/vendor/d3/d3.js',
@@ -14,9 +11,11 @@ var D3 = function(options){
         return reply.file(filename);
       }
     },
-  ]);
+  ];
+};
 
-  ui.register([
+var registerUi = function(){
+  return [
     {
       injectHeaders: [
         '<script src="/vendor/d3/d3.js" type="text/javascript"></script>',
@@ -40,7 +39,24 @@ var D3 = function(options){
         },
       ],
     },
-  ]);
+  ];
 };
 
-module.exports = D3;
+var Plugin = function(options){
+  this.filename = path.resolve(__dirname, 'd3.js');
+};
+
+// NOTE: This type of plugin doesn't require an init method
+// since it doesn't actually do anything but surface a javascript
+// library
+
+Plugin.prototype.register = function(options){
+  var register = options.register;
+  register({
+    proxy: options.proxy,
+    ui: registerUi.call(this),
+    server: routes.call(this)
+  });
+};
+
+module.exports = Plugin;

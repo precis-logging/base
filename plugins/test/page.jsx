@@ -44,8 +44,9 @@ var Test = React.createClass({
   },
   updateState(TestStore){
     var records = TestStore.items();
+    var latest = records.length?records[records.length-1]:null;
     this.setState({
-      value: TestStore.latest(),
+      value: latest,
       records: records.slice(Math.max(records.length-10, 0)),
     });
   },

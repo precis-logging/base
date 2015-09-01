@@ -1,12 +1,9 @@
 var fs = require('fs');
 var path = require('path');
 
-var Charts = function(options){
-  var server = options.server;
-  var ui = options.ui;
-  var filename = path.resolve(__dirname, 'd3rrc.js');
-
-  server.route([
+var routes = function(){
+  var filename = this.filename;
+  return [
     {
       method: 'GET',
       path: '/vendor/d3rrc/d3rrc.js',
@@ -14,10 +11,11 @@ var Charts = function(options){
         return reply.file(filename);
       }
     },
-  ]);
+  ]
+};
 
-  console.log('Inject d3rrc')
-  ui.register([
+var registerUi = function(){
+  return [
     {
       injectHeaders: [
         '<script src="/vendor/d3rrc/d3rrc.js" type="text/javascript"></script>',
@@ -41,7 +39,24 @@ var Charts = function(options){
         },
       ],
     },
-  ]);
+  ];
 };
 
-module.exports = Charts;
+var Plugin = function(options){
+  this.filename = path.resolve(__dirname, 'd3rrc.js');
+};
+
+// NOTE: This type of plugin doesn't require an init method
+// since it doesn't actually do anything but surface a javascript
+// library
+
+Plugin.prototype.register = function(options){
+  var register = options.register;
+  register({
+    proxy: options.proxy,
+    ui: registerUi.call(this),
+    server: routes.call(this)
+  });
+};
+
+module.exports = Plugin;
