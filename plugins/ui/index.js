@@ -1,6 +1,7 @@
 var path = require('path');
 var fs = require('fs');
 var defaults = require('precis-utils').defaults;
+var SocketClient = require('socket.io-client');
 
 var indexPageHandler = function(req, reply){
   fs.readFile(this.indexPageLocation, function(err, raw){
@@ -37,6 +38,7 @@ var UI = function(options){
   this.pages = [];
   this.stores = [];
   this.headers = [];
+  this.sockets = options.sockets;
   this.indexPageLocation = path.join(options.webroot, 'index.html');
   this.config = {
     ui: defaults({
@@ -111,7 +113,7 @@ var UI = function(options){
   ]);
 };
 
-UI.prototype.register = function(options){
+UI.prototype.register = function(options, proxyHost){
   var items = Array.isArray(options)?options:[options];
   items.forEach(function(item){
     if(item.path && item.contents){
@@ -166,6 +168,17 @@ UI.prototype.register = function(options){
       return this.server.route(pages);
     }
     if(item.stores && Array.isArray(item.stores)){
+      if(proxyHost){
+        var client = SocketClient(proxyHost);
+        var sockets = this.sockets;
+        item.stores.forEach((info)=>{
+          if(info.socketEvent && info.socketEvent.event){
+            client.on(info.socketEvent.event, function(data){
+              sockets.emit(info.socketEvent.event, data);
+            });
+          }
+        });
+      }
       return this.stores = this.stores.concat(item.stores);
     }
     if(item.injectHeaders && Array.isArray(item.injectHeaders)){
