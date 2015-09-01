@@ -114,6 +114,7 @@ var UI = function(options){
 };
 
 UI.prototype.register = function(options, proxyHost){
+  var logger = this.logger;
   var items = Array.isArray(options)?options:[options];
   items.forEach(function(item){
     if(item.path && item.contents){
@@ -171,6 +172,10 @@ UI.prototype.register = function(options, proxyHost){
       if(proxyHost){
         var client = SocketClient(proxyHost);
         var sockets = this.sockets;
+        client.on('connect', ()=>logger.info('Proxy connected to '+proxyHost));
+        client.on('connect_timeout', ()=>logger.warn('Proxy connection to '+proxyHost+' timed out'));
+        client.on('reconnect_error', (e)=>logger.error('PROXY ERROR: '+proxyHost+'\n', e));
+        client.on('reconnect_failed', ()=>logger.error('Proxy connection to '+proxyHost+' failed!'));
         item.stores.forEach((info)=>{
           if(info.socketEvent && info.socketEvent.event){
             client.on(info.socketEvent.event, function(data){
