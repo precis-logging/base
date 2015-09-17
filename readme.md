@@ -42,6 +42,11 @@ With nodemon
 NODE_ENV=dev nodemon server
 ```
 
+With Debug Messages and nodemon
+```
+NODE_ENV=dev nodemon server -d
+```
+
 ##Plugins
 
 Plugins are used to extend the functionality available in the UI and/or the backend.  The sample plugin in plugins/test/index.js provides a sample of everything a plugin can do.

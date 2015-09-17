@@ -20,9 +20,12 @@ var busModule = (config.bus||{}).module || false;
 var Bus = busModule?require(busModule).Bus:false;
 
 var stores = require('./lib/stores');
-var webroot = path.join(__dirname, (config.web||{}).site||'/web');
+var webconfig = utils.defaults({port: 8080, host: '0.0.0.0', site: '/web'}, config.web);
+//var webroot = path.join(__dirname, (config.web||{}).site||'/web');
+var webroot = path.join(__dirname, webconfig.site);
 var bowerRoot = path.join(__dirname, (config.bower||{}).site||'/bower_components');
-var server = require('./lib/server');
+//var server = require('./lib/server');
+var Hapi = require('hapi');
 var sift = require('sift');
 
 var SocketIO = require('socket.io');
@@ -32,6 +35,26 @@ var HapiSwagger = require('hapi-swagger');
 var Handlers = require('./lib/handlers.js').Handlers;
 
 var events = 0;
+
+
+var Inert = require('inert');
+var Vision = require('vision');
+
+var pjson = require('./package.json');
+
+var PORT = webconfig.port;
+var HOST = webconfig.host;
+
+var PORT = webconfig.port;
+var HOST = webconfig.host;
+
+var server = new Hapi.Server();
+
+server.connection({host: HOST, port: PORT});
+
+server.on('internalError', function(e){
+  logger.error(e);
+});
 
 var io = SocketIO.listen(server.listener);
 
@@ -62,61 +85,75 @@ stores.on('error', function(err){
   logger.error(err);
 });
 
-stores.ready(function(){
-  var bus = Bus?new Bus(config.bus):false;
+var started = function(){
+  logger.info(pjson.name+' website started on http://'+HOST+':'+PORT);
+};
 
-  var ui = new UI(utils.defaults({
-    logger: logger,
-    config: config.ui,
-    server: server,
-    stores: stores,
-    ui: ui,
-    bus: bus,
-    sockets: io,
-    webroot: webroot,
-    bowerRoot: bowerRoot,
-    baseConfig: config,
-  }, uiConfig));
-
-  var handlers = new Handlers({
-    logger: logger,
-    config: handlersConfig,
-    server: server,
-    stores: stores,
-    ui: ui,
-    bus: bus,
-    sockets: io,
-  });
-
-  server.register({
-    register: HapiSwagger,
-    options: utils.defaults({swagger: {apiVersion: 'v1'}}, config).swagger
-  }, function(err){
-    if(err){
-      return logger.error(err);
-    }
-    logger.info('Swagger interface loaded');
-  });
-
-  if(Bus){
-    bus.on('error', function(error){
-      logger.error(error);
-    });
-
-    bus.on('started', function(info){
-      logger.info('Attached to message bus.', info.ns?info.ns:info);
-    });
-
-    bus.on('event', function(data){
-      handlers.push(data);
-      events++;
-    });
-
-    bus.on('stopped', function(){
-      logger.info('Detached from message bus.');
-    });
-
-    bus.start();
+server.register([Vision, Inert], function (err) {
+  if(err){
+    return logger.error(err);
   }
+  logger.debug('Loaded: Vision');
+  logger.debug('Loaded: Inert');
+  stores.ready(function(){
+    var bus = Bus?new Bus(config.bus):false;
 
+    var ui = new UI(utils.defaults({
+      logger: logger,
+      config: config.ui,
+      server: server,
+      stores: stores,
+      ui: ui,
+      bus: bus,
+      sockets: io,
+      webroot: webroot,
+      bowerRoot: bowerRoot,
+      baseConfig: config,
+    }, uiConfig));
+
+    var handlers = new Handlers({
+      logger: logger,
+      config: handlersConfig,
+      server: server,
+      stores: stores,
+      ui: ui,
+      bus: bus,
+      sockets: io,
+    });
+
+    handlers.ready(function(){
+      server.register({
+        register: HapiSwagger,
+        options: utils.defaults({swagger: {apiVersion: 'v1'}}, config).swagger
+      }, function(err){
+        if(err){
+          return logger.error(err);
+        }
+        logger.info('Swagger interface loaded');
+      });
+
+      if(Bus){
+        bus.on('error', function(error){
+          logger.error(error);
+        });
+
+        bus.on('started', function(info){
+          logger.info('Attached to message bus.', info.ns?info.ns:info);
+        });
+
+        bus.on('event', function(data){
+          handlers.push(data);
+          events++;
+        });
+
+        bus.on('stopped', function(){
+          logger.info('Detached from message bus.');
+        });
+
+        bus.start();
+      }
+
+      server.start(started);
+    });
+  });
 });
