@@ -28,7 +28,7 @@ var getOplogConfig = function(options){
   var ns = options.ns || (database || db)+'.'+options.collection||'bus';
   connStr.push(db);
   connStr = connStr.join('/')+(connParts[1]?'?'+connParts[1]:'');
-  logger.info('Bus connecting to:', connStr);
+  logger.info('BUS:', 'Connecting to:', connStr);
   return {
           connectionString: connStr,
           ns: ns,
@@ -39,15 +39,20 @@ var Bus = function(options){
   this.options = options;
   this.logger = options.logger;
   this.monitoring = false;
-  this.firstRecord = true;
   this.started = false;
+  this.tailing = false;
   EventEmitter.call(this);
-  this.firstRecord = true;
 };
 
 util.inherits(Bus, EventEmitter);
 
 Bus.prototype.tail = function(){
+  if(!this.started){
+    return this.start();
+  }
+  if(this.tailing){
+    return;
+  }
   var {db, oplogConfig, options} = this;
   this.started = true;
 
@@ -70,27 +75,28 @@ Bus.prototype.tail = function(){
     };
   var startTime = getStartTime(options, this.lastSeenTS);
   if(startTime){
-    logger.info('Start Timestamp: ', new Date(startTime.getHighBits()*1000));
+    logger.info('BUS:', 'Start Timestamp: ', new Date(startTime.getHighBits()*1000));
     filter.ts = {$gt: startTime};
   }
-  logger.info('Bus Filter: ', filter);
+  logger.info('BUS:', 'Filter: ', filter);
 
   var cursor = collection.find(filter, cursorOptions);
 
   //*
   // This doesn't seem to work the way we would like, instead of single records
   // when they arrive, it seems to push in bulk.
-  var stream = cursor.stream();
+  var stream = this.tailStream = cursor.stream();
   stream.on('end', function(){
-    logger.info('Bus stopped');
+    logger.info('BUS:', 'Stopped');
     this.emit('stopped');
+    this.tailing = false;
   }.bind(this));
   stream.on('data', function(data){
-    this.firstRecord = false;
     this.lastSeenTS = data.ts;
     this.emit('event', data);
     if(this.firstRecord){
-      logger.info('First record from bus', new Date(this.lastSeenTS.getHighBits()*1000));
+      logger.info('BUS:', 'First record', new Date(this.lastSeenTS.getHighBits()*1000));
+      this.firstRecord = false;
     }
   }.bind(this));
   stream.on('error', function(err){
@@ -99,15 +105,18 @@ Bus.prototype.tail = function(){
     if(/operation exceeded time limit/i.test(msg) ||
        /^server.+?sockets? closed$/i.test(msg)||
        /cursor (killed or )?timed out/i.test(msg)){
-      logger.info('Cursor died, restarting');
+      logger.info('BUS:', 'Cursor died, restarting');
       return this.tail();
     }
     if(/connection.+?timed out/.test(msg)){
-      logger.info('Bus stopped');
+      logger.info('BUS:', 'Stopped');
+      this.tailing = false;
       return this.emit('stopped');
     }
     this.emit('error', err);
   }.bind(this));
+  stream.resume();
+  //*/
 
   /*
   var next = function(){
@@ -130,34 +139,57 @@ Bus.prototype.tail = function(){
 
       if(this.firstRecord){
         logger.info('First record from bus: ', new Date(data.ts.getHighBits()*1000));
+        this.firstRecord = false;
       }
       //oplogConfig.ts = data.ts;
       this.lastSeenTS = data.ts;
-      this.firstRecord = false;
       this.emit('event', data);
       return setImmediate(next);
     }.bind(this));
   }.bind(this);
   next();
   //*/
+
+  logger.info('BUS:', 'Awaiting Messages');
+  this.tailing = true;
+};
+
+Bus.prototype.stop = function(){
+  if(!this.started){
+    return;
+  }
+  if(this.tailStream){
+    this.tailStream.end();
+    this.tailStream = null;
+  }
+  this.conn.close();
+  this.db.close();
+  this.started = false;
 };
 
 Bus.prototype.start = function(){
   var options = this.options;
   var oplogConfig = this.oplogConfig = getOplogConfig(options);
 
+  if(this.started){
+    return this.tail();
+  }
+
   MongoClient.connect(oplogConfig.connectionString, function(err, conn){
     if(err){
       logger.error(err);
       if(/connection.+?timed out/.test(msg)){
-        logger.info('Bus stopped');
+        logger.info('BUS:', 'Stopped');
         this.emit('stopped');
       }
       return this.emit('error', err);
     }
+    this.conn = conn;
     this.db = conn.db(oplogConfig.database || 'local');
+    this.started = true;
+    this.firstRecord = true;
+    logger.info('BUS:', 'Connected to message bus');
     this.tail();
-    logger.info('Connected to message bus, awaiting messages');
   }.bind(this));
 };
 

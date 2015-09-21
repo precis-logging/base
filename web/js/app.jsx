@@ -110,7 +110,7 @@ var JSONNode = window.JSONNode = React.createClass({
 });
 
 var published = function(page){
-  return page.path.indexOf('/:')===-1;
+  return (page.path.indexOf('/:')===-1) && (page.title);
 };
 
 var Nav = React.createClass({
