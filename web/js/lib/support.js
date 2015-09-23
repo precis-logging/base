@@ -6,6 +6,24 @@
       .match(/^\[object\s(.*)\]$/)[1];
   };
 
+  var clone = function(src){
+    if(!src || typeof(src) !== 'object'){
+      return src;
+    }
+    if(src instanceof Date){
+      return new Date(src);
+    }
+    if(src instanceof Array){
+      return src.map((item)=>clone(item));
+    }
+    if(src instanceof RegExp){
+      return new RegExp(src);
+    }
+    var temp = (src.prototype)?Object.create(src.prototype):new src.constructor();
+    Object.keys(src).forEach((key)=>{temp[key] = clone(src[key]);});
+    return temp;
+  };
+
   //Defines the type of the value, extended typeof
   var whatis = function(val) {
 
@@ -72,6 +90,8 @@
   //	_equal.fucntion =  _equal.regexp;
 
   container.Support = {
+    noop: function(){},
+
     el: function(src, sel){
       if(!sel){
         sel = src;
@@ -145,6 +165,12 @@
 
     isFalse: function(value){
       return !!this.reFalse.exec(''+value);
+    },
+
+    addCommas: function(x) {
+      var parts = x.toString().split(".");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return parts.join(".");
     },
 
     isNumeric: function(n){
@@ -351,6 +377,33 @@
       }
 
       return true;
-    }
+    },
+
+    clone: clone,
+
+    omit: function(src, omit){
+      if(!src || typeof(src) !== 'object'){
+        return src;
+      }
+      if(src instanceof Date){
+        return new Date(src);
+      }
+      if(src instanceof Array){
+        return src.map((item)=>clone(item));
+      }
+      if(src instanceof RegExp){
+        return new RegExp(src);
+      }
+      var temp = (src.prototype)?Object.create(src.prototype):new src.constructor();
+      omit = Array.isArray(omit)?omit:Array.prototype.slice.call(arguments, 1, arguments.length);
+      var notOmit = function(item){
+        return omit.indexOf(item)===-1;
+      };
+      var copyValue = function(key){
+        temp[key] = src[key];
+      };
+      Object.keys(src).filter(notOmit).forEach(copyValue);
+      return temp;
+    },
   };
 })(this);

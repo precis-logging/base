@@ -113,6 +113,67 @@ var published = function(page){
   return (page.path.indexOf('/:')===-1) && (page.title);
 };
 
+var SystemStatus = React.createClass({
+  getInitialState(){
+    return {status: 'unknown'};
+  },
+  componentDidMount(){
+    socket.on('connect', this.connected);
+    socket.on('disconnect', this.updateStatus);
+    Loader.get('/api/v1/bus/status', function(err, status){
+      socket.on('bus::status', this.updateStatus);
+      if(err){
+        return;
+      }
+      this.updateStatus(status);
+    }.bind(this));
+  },
+  componentWillUnmount(){
+    socket.off('connect', this.connected);
+    socket.off('disconnect', this.updateStatus);
+    socket.off('bus::status', this.updateStatus);
+  },
+  connected(){
+    setTimeout(function(){
+      Loader.get('/api/v1/bus/status', function(err, status){
+        if(err){
+          return;
+        }
+        if(this.state.status !== 'tailing'){
+          this.updateStatus(status);
+        }
+      }.bind(this));
+    }.bind(this), 500);
+  },
+  updateStatus(status){
+    this.setState({
+      status: status||'unknown'
+    });
+  },
+  render(){
+    //<li className="btn btn-danger">OFFLINE</li>
+    var status = this.state.status.toUpperCase();
+    var className = "btn btn-warning";
+    switch(status){
+      case('TRANSPORT CLOSE'):
+        status = 'DEAD';
+        className = "btn btn-danger";
+        break;
+      case('STOPPED'):
+        status = 'OFFLINE';
+        className = "btn btn-danger";
+        break;
+      case('TAILING'):
+        status = 'ONLINE';
+        className = "btn btn-success";
+        break;
+    }
+    return (
+      <li className={className}>{status}</li>
+    )
+  }
+});
+
 var Nav = React.createClass({
   render(){
     return (<nav className="navbar navbar-inverse navbar-fixed-top">
@@ -132,7 +193,9 @@ var Nav = React.createClass({
             tagName="ul"
             className='nav navbar-nav navbar-right'
             matching={{role: 'primary-nav-action'}} />
-
+          <ul className='nav navbar-nav navbar-right'>
+            <SystemStatus />
+          </ul>
           {/*// Add this back in if you want search
           <form className="navbar-form navbar-right">
             <input type="text" className="form-control" placeholder="Search..." />
@@ -146,7 +209,6 @@ var Nav = React.createClass({
 
 var Widget = React.createClass({
   render(){
-    console.log(this.props)
     return (<div className="col-xs-6 col-sm-3 placeholder">
               <img src="http://placehold.it/200x200" />
               <h4>Label</h4>
@@ -248,7 +310,11 @@ Loader.get('/api/v1/ui/pages', function(err, pages){
     var pgs = [
       <DefaultRoute name="dashboard" handler={Dashboard} key="defualt"/>,
       <NotFoundRoute handler={RouteNotFound} key="notFoundRoute"/>,
-    ].concat(pages.map(function(page){
+    ];
+    if(PagesStore.page('BaseReportPage')){
+      pgs.push(<Route handler={PagesStore.page('BaseReportPage')} name="/report/base" key="basereport"/>);
+    }
+    pgs = pgs.concat(pages.map(function(page){
       return <Route name={page.path} handler={PagesStore.page(page.componentName)} key={page.componentName} />
     }));
     var routes = (

@@ -55,6 +55,7 @@ Bus.prototype.tail = function(){
   }
   var {db, oplogConfig, options} = this;
   this.started = true;
+  this.emit('started', oplogConfig);
 
   var cursorOptions = {
       tailable: true,
@@ -90,6 +91,8 @@ Bus.prototype.tail = function(){
     logger.info('BUS:', 'Stopped');
     this.emit('stopped');
     this.tailing = false;
+    this.started = false;
+    this.starting = false;
   }.bind(this));
   stream.on('data', function(data){
     this.lastSeenTS = data.ts;
@@ -174,9 +177,14 @@ Bus.prototype.start = function(){
   if(this.started){
     return this.tail();
   }
+  if(this.starting){
+    return;
+  }
+  this.starting = true;
 
   MongoClient.connect(oplogConfig.connectionString, function(err, conn){
     if(err){
+      var msg = err.message === 'n/a'?err.$err||err.toString():err.toString();
       logger.error(err);
       if(/connection.+?timed out/.test(msg)){
         logger.info('BUS:', 'Stopped');
@@ -186,6 +194,7 @@ Bus.prototype.start = function(){
     }
     this.conn = conn;
     this.db = conn.db(oplogConfig.database || 'local');
+    this.starting = false;
     this.started = true;
     this.firstRecord = true;
     logger.info('BUS:', 'Connected to message bus');

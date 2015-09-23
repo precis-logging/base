@@ -133,22 +133,52 @@ server.register([Vision, Inert], function (err) {
       });
 
       if(Bus){
+        var gotFirstMessage = false;
         bus.on('error', function(error){
           logger.error(error);
         });
 
         bus.on('started', function(info){
           logger.info('Attached to message bus.', info.ns?info.ns:info);
+          io.emit('bus::status', 'waiting');
         });
 
         bus.on('event', function(data){
+          if(!gotFirstMessage){
+            io.emit('bus::status', 'tailing');
+          }
+          gotFirstMessage = true;
           handlers.push(data);
           events++;
         });
 
         bus.on('stopped', function(){
+          gotFirstMessage = false;
           logger.info('Detached from message bus.');
+          io.emit('bus::status', 'stopped');
         });
+
+        server.route([
+          {
+            path: '/api/v1/bus/status',
+            method: 'get',
+            handler: function(req, reply){
+              if(bus.tailing){
+                if(!gotFirstMessage){
+                  return reply('waiting');
+                }
+                return reply('tailing');
+              }
+              if(bus.started){
+                return reply('started');
+              }
+              if(bus.starting){
+                return reply('starting');
+              }
+              return reply('stopped');
+            }
+          }
+        ]);
 
         bus.start();
       }
