@@ -161,7 +161,7 @@ server.register([Vision, Inert], function (err) {
         server.route([
           {
             path: '/api/v1/bus/status',
-            method: 'get',
+            method: 'GET',
             handler: function(req, reply){
               if(bus.tailing){
                 if(!gotFirstMessage){
@@ -177,7 +177,29 @@ server.register([Vision, Inert], function (err) {
               }
               return reply('stopped');
             }
-          }
+          },
+          {
+            path: '/api/v1/bus/start',
+            method: 'POST',
+            handler: function(req, reply){
+              if(bus.tailing){
+                if(!gotFirstMessage){
+                  return reply('waiting');
+                }
+                return reply('tailing');
+              }
+              if(bus.started){
+                return reply('started');
+              }
+              if(bus.starting){
+                return reply('starting');
+              }
+              logger.info('Tailing Starting');
+              bus.tail();
+              io.emit('bus::status', 'starting');
+              return reply('starting');
+            }
+          },
         ]);
 
         bus.start();

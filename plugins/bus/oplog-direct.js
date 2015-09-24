@@ -183,6 +183,7 @@ Bus.prototype.start = function(){
   this.starting = true;
 
   MongoClient.connect(oplogConfig.connectionString, function(err, conn){
+    this.starting = false;
     if(err){
       var msg = err.message === 'n/a'?err.$err||err.toString():err.toString();
       logger.error(err);
@@ -194,7 +195,6 @@ Bus.prototype.start = function(){
     }
     this.conn = conn;
     this.db = conn.db(oplogConfig.database || 'local');
-    this.starting = false;
     this.started = true;
     this.firstRecord = true;
     logger.info('BUS:', 'Connected to message bus');

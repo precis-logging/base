@@ -150,6 +150,15 @@ var SystemStatus = React.createClass({
       status: status||'unknown'
     });
   },
+  tail(e){
+    e.preventDefault();
+    Loader.post('/api/v1/bus/start', function(err, status){
+      if(err){
+        return;
+      }
+      this.setState({status});
+    }.bind(this));
+  },
   render(){
     //<li className="btn btn-danger">OFFLINE</li>
     var status = this.state.status.toUpperCase();
@@ -169,7 +178,7 @@ var SystemStatus = React.createClass({
         break;
     }
     return (
-      <li className={className}>{status}</li>
+      <li><button className={className} onClick={this.tail}>{status}</button></li>
     )
   }
 });

@@ -13,7 +13,7 @@
     if(src instanceof Date){
       return new Date(src);
     }
-    if(src instanceof Array){
+    if(Array.isArray(src)){
       return src.map((item)=>clone(item));
     }
     if(src instanceof RegExp){
