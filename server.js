@@ -119,6 +119,7 @@ server.register([Vision, Inert], function (err) {
       ui: ui,
       bus: bus,
       sockets: io,
+      Bus: Bus,
     });
 
     handlers.ready(function(){
@@ -146,8 +147,8 @@ server.register([Vision, Inert], function (err) {
         bus.on('event', function(data){
           if(!gotFirstMessage){
             io.emit('bus::status', 'tailing');
+            gotFirstMessage = true;
           }
-          gotFirstMessage = true;
           handlers.push(data);
           events++;
         });

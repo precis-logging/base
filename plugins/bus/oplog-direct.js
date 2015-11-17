@@ -4,6 +4,7 @@ var util = require('util');
 var Mongo = require('mongodb');
 var MongoClient = Mongo.MongoClient;
 var Timestamp = Mongo.Timestamp;
+var noop = function(){};
 
 var getStartTime = function(options, ts){
   if(ts){
@@ -28,7 +29,7 @@ var getOplogConfig = function(options){
   var ns = options.ns || (database || db)+'.'+options.collection||'bus';
   connStr.push(db);
   connStr = connStr.join('/')+(connParts[1]?'?'+connParts[1]:'');
-  logger.info('BUS:', 'Connecting to:', connStr);
+  logger.info(options.prefix||'BUS:', 'Connecting to:', connStr);
   return {
           connectionString: connStr,
           ns: ns,
@@ -60,8 +61,6 @@ Bus.prototype.tail = function(){
   var cursorOptions = {
       tailable: true,
       awaitdata: true,
-      //batchSize: 100,
-      //maxTimeMS: 10000,//false,
       oplogReplay: true,
       cursorReplay: true,
       numberOfRetries: Number.MAX_VALUE
@@ -76,19 +75,16 @@ Bus.prototype.tail = function(){
     };
   var startTime = getStartTime(options, this.lastSeenTS);
   if(startTime){
-    logger.info('BUS:', 'Start Timestamp: ', new Date(startTime.getHighBits()*1000));
+    logger.info(this.options.prefix||'BUS:', 'Start Timestamp: ', new Date(startTime.getHighBits()*1000));
     filter.ts = {$gt: startTime};
   }
-  logger.info('BUS:', 'Filter: ', filter);
+  logger.info(this.options.prefix||'BUS:', 'Filter: ', filter);
 
   var cursor = collection.find(filter, cursorOptions);
 
-  //*
-  // This doesn't seem to work the way we would like, instead of single records
-  // when they arrive, it seems to push in bulk.
   var stream = this.tailStream = cursor.stream();
   stream.on('end', function(){
-    logger.info('BUS:', 'Stopped');
+    logger.info(this.options.prefix||'BUS:', 'Stopped');
     this.emit('stopped');
     this.tailing = false;
     this.started = false;
@@ -98,7 +94,7 @@ Bus.prototype.tail = function(){
     this.lastSeenTS = data.ts;
     this.emit('event', data);
     if(this.firstRecord){
-      logger.info('BUS:', 'First record', new Date(this.lastSeenTS.getHighBits()*1000));
+      logger.info(this.options.prefix||'BUS:', 'First record', new Date(this.lastSeenTS.getHighBits()*1000));
       this.firstRecord = false;
     }
   }.bind(this));
@@ -108,52 +104,19 @@ Bus.prototype.tail = function(){
     if(/operation exceeded time limit/i.test(msg) ||
        /^server.+?sockets? closed$/i.test(msg)||
        /cursor (killed or )?timed out/i.test(msg)){
-      logger.info('BUS:', 'Cursor died, restarting');
+      logger.info(this.options.prefix||'BUS:', 'Cursor died, restarting');
       return this.tail();
     }
     if(/connection.+?timed out/.test(msg)){
-      logger.info('BUS:', 'Stopped');
+      logger.info(this.options.prefix||'BUS:', 'Stopped');
       this.tailing = false;
       return this.emit('stopped');
     }
     this.emit('error', err);
   }.bind(this));
   stream.resume();
-  //*/
 
-  /*
-  var next = function(){
-    cursor.nextObject(function(err, data){
-      if(err){
-        var msg = err.message === 'n/a'?err.$err||err.toString():err.toString();
-        logger.error(msg);
-        if(/operation exceeded time limit/.test(msg) ||
-           /cursor (killed or )?timed out/i.test(msg)){
-          logger.info('Bus cursor died, restarting');
-          return this.tail();
-        }
-        logger.error(err);
-        return this.emit(err);
-      }
-
-      if(!data){
-        return setImmediate(next);
-      }
-
-      if(this.firstRecord){
-        logger.info('First record from bus: ', new Date(data.ts.getHighBits()*1000));
-        this.firstRecord = false;
-      }
-      //oplogConfig.ts = data.ts;
-      this.lastSeenTS = data.ts;
-      this.emit('event', data);
-      return setImmediate(next);
-    }.bind(this));
-  }.bind(this);
-  next();
-  //*/
-
-  logger.info('BUS:', 'Awaiting Messages');
+  logger.info(this.options.prefix||'BUS:', 'Awaiting Messages from '+oplogConfig.connectionString);
   this.tailing = true;
 };
 
@@ -173,7 +136,9 @@ Bus.prototype.stop = function(){
 Bus.prototype.start = function(){
   var options = this.options;
   var oplogConfig = this.oplogConfig = getOplogConfig(options);
-
+  var segments = this.oplogConfig.ns.split('.');
+  var emitDb = segments[0];
+  var emitCollName = this.emitCollName = segments[1];
   if(this.started){
     return this.tail();
   }
@@ -188,18 +153,37 @@ Bus.prototype.start = function(){
       var msg = err.message === 'n/a'?err.$err||err.toString():err.toString();
       logger.error(err);
       if(/connection.+?timed out/.test(msg)){
-        logger.info('BUS:', 'Stopped');
+        logger.info(this.options.prefix||'BUS:', 'Stopped');
         this.emit('stopped');
       }
       return this.emit('error', err);
     }
     this.conn = conn;
+    this.emitDb = conn.db(emitDb);
     this.db = conn.db(oplogConfig.database || 'local');
     this.started = true;
     this.firstRecord = true;
-    logger.info('BUS:', 'Connected to message bus');
+    logger.info(this.options.prefix||'BUS:', 'Connected to message bus '+oplogConfig.connectionString);
     this.tail();
   }.bind(this));
+};
+
+Bus.prototype.write = function(msg, callback){
+  var reformIds = function(record){
+    if(record._id){
+      var id = record._id.toString?record._id.toString():record._id;
+      try{
+        id = new Mongo.ObjectID(id);
+        record._id = id;
+      }catch(e){}
+    }
+    return record;
+  };
+  var msgs = (Array.isArray(msg)?msg.map(reformIds):[msg].map(reformIds)).filter((record)=>!!record);
+  if(msgs.length){
+    return this.emitDb.collection(this.emitCollName).insertMany(msgs, {ordered: false}, callback||noop);
+  }
+  logger.debug('Empty Forward Recordset:', Array.isArray(msg)?msg.filter((record)=>!!record):msg);
 };
 
 module.exports = {
