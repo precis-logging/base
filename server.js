@@ -1,5 +1,5 @@
 require('babel-core/register')({
-  "presets": ["es2015"]
+  presets: ['es2015'],
 });
 try{
   var memwatch = require('memwatch');
