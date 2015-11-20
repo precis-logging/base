@@ -1,4 +1,6 @@
-require('babel-core/register');
+require('babel-core/register')({
+  "presets": ["es2015"]
+});
 try{
   var memwatch = require('memwatch');
   var heapdump = require('heapdump');
