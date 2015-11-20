@@ -160,7 +160,6 @@ var SystemStatus = React.createClass({
     }.bind(this));
   },
   render(){
-    //<li className="btn btn-danger">OFFLINE</li>
     var status = this.state.status.toUpperCase();
     var className = "btn btn-warning";
     switch(status){
