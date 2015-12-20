@@ -86,8 +86,11 @@ stores.on('error', function(err){
   logger.error(err);
 });
 
-var started = function(){
+var started = function(bus){
   logger.info(pjson.name+' website started on http://'+HOST+':'+PORT);
+  if(bus){
+    bus.start();
+  }
 };
 
 server.register([Vision, Inert], function (err) {
@@ -209,11 +212,11 @@ server.register([Vision, Inert], function (err) {
             }
           },
         ]);
-
-        bus.start();
       }
 
-      server.start(started);
+      server.start(function(){
+        started(Bus?bus:null);
+      });
     });
   });
 });
