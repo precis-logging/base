@@ -110,6 +110,8 @@ Bus.prototype.tail = function(){
     if(/connection.+?timed out/.test(msg)){
       logger.info(this.options.prefix||'BUS:', 'Stopped');
       this.tailing = false;
+      this.started = false;
+      this.starting = false;
       return this.emit('stopped');
     }
     this.emit('error', err);
@@ -154,6 +156,9 @@ Bus.prototype.start = function(){
       logger.error(err);
       if(/connection.+?timed out/.test(msg)){
         logger.info(this.options.prefix||'BUS:', 'Stopped');
+        this.tailing = false;
+        this.started = false;
+        this.starting = false;
         this.emit('stopped');
       }
       return this.emit('error', err);

@@ -3,14 +3,14 @@
 USER="sysadmin"
 NODE_ENV="prd"
 PORT="8080"
-APP_DIR="/home/sysadmin/replicator"
+APP_DIR="/home/sysadmin/precis"
 NODE_APP="server.js"
 CONFIG_DIR="$APP_DIR"
 PID_DIR="$APP_DIR/pid"
 PID_FILE="$PID_DIR/app.pid"
 LOG_DIR="$APP_DIR/log"
 LOG_FILE="$LOG_DIR/app.log"
-NODE_EXEC=/home/sysadmin/.nvm/versions/node/v4.2.2/bin/node
+NODE_EXEC=/home/sysadmin/.nvm/versions/node/v4.2.3/bin/node
 
 ###############
 
