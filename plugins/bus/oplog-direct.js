@@ -42,6 +42,7 @@ var Bus = function(options){
   this.monitoring = false;
   this.started = false;
   this.tailing = false;
+  this.forceStop = false;
   EventEmitter.call(this);
 };
 
@@ -56,6 +57,7 @@ Bus.prototype.tail = function(){
   }
   var {db, oplogConfig, options} = this;
   this.started = true;
+  this.forceStop = false;
   this.emit('started', oplogConfig);
 
   var cursorOptions = {
@@ -130,6 +132,7 @@ Bus.prototype.stop = function(){
     this.tailStream.end();
     this.tailStream = null;
   }
+  this.forceStop = true;
   this.conn.close();
   this.db.close();
   this.started = false;
@@ -148,6 +151,7 @@ Bus.prototype.start = function(){
     return;
   }
   this.starting = true;
+  this.forceStop = false;
 
   MongoClient.connect(oplogConfig.connectionString, function(err, conn){
     this.starting = false;
