@@ -114,10 +114,15 @@ window.DataStore = Reflux.createStore({
     return _.where(this._items, attributes);
   },
 
+  GC: function(){
+    this._items = this._items.slice(Math.max(0, this._items.length-5000), this._items.length);
+  },
+
   persist: function(model){
     var idx = model._id?_.findIndex(this._items, _.matcher({_id: model._id, _type: model._type})):
               _.findIndex(this._items, _.matcher({id: model.id}));
     (idx !== -1)?this._items[idx] = model:this._items.push(model);
+    this.GC();
 
     this.trigger();
   },
