@@ -118,7 +118,15 @@ window.DataStore = Reflux.createStore({
     this._items = this._items.slice(Math.max(0, this._items.length-5000), this._items.length);
   },
 
-  persist: function(model){
+  persist: function(models){
+    var type = models._type;
+    var records = Array.isArray(models)?models:[models];
+    records.forEach(function(model){
+      this.persistRecord(Object.assign({}, model, {_type: type}));
+    }.bind(this));
+  },
+
+  persistRecord: function(model){
     var idx = model._id?_.findIndex(this._items, _.matcher({_id: model._id, _type: model._type})):
               _.findIndex(this._items, _.matcher({id: model.id}));
     (idx !== -1)?this._items[idx] = model:this._items.push(model);
